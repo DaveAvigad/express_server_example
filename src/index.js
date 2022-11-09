@@ -1,47 +1,86 @@
 // init project
-var express = require("express");
-var bodyParser = require("body-parser");
-var app = express();
-var url = String(process.env.HOSTNAME).split("-");
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const url = String(process.env.HOSTNAME).split('-');
+
+const { MongoClient } = require('mongodb');
+let result = {};
+async function main () {
+  /**
+   * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
+   * See https://docs.mongodb.com/drivers/node/ for more details
+   */
+  const uri = 'mongodb+srv://db-user:db-pass@cluster0.i39dvc2.mongodb.net/?retryWrites=true&w=majority';
+
+  /**
+   * The Mongo Client you will use to interact with your database
+   * See https://mongodb.github.io/node-mongodb-native/3.6/api/MongoClient.html for more details
+   * In case: '[MONGODB DRIVER] Warning: Current Server Discovery and Monitoring engine is deprecated...'
+   * pass option { useUnifiedTopology: true } to the MongoClient constructor.
+   * const client =  new MongoClient(uri, {useUnifiedTopology: true})
+   */
+
+  const client = new MongoClient(uri);
+  try {
+    // Connect to the MongoDB cluster
+    await client.connect();
+
+    // Make the appropriate DB calls
+    result = await client.db('sample_airbnb').collection('listingsAndReviews').findOne();
+    // async function createListing(client, newListing){
+    // const result = await client.db("sample_airbnb").collection("listingsAndReviews").insertOne(newListing);
+    // console.log(`New listing created with the following id: ${result.insertedId}`);
+    // }
+  } finally {
+    // Close the connection to the MongoDB cluster
+    await client.close();
+  }
+}
+
+main().catch(console.error);
 
 app.use(bodyParser.json());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // This route processes GET requests to "/"`
-app.get("/", function (req, res) {
+app.get('/', function (req, res) {
   res.send(
     '<h1>REST API</h1><p>A REST API starter using Express and body-parser.<br /><br />To test, curl the following and view the terminal logs:<br /><br /><i>curl -H "Content-Type: application/json" -X POST -d \'{"username":"test","data":"1234"}\' https://' +
       url[2] +
-      ".sse.codesandbox.io/update<i></p>"
+      '.sse.codesandbox.io/update<i></p>'
   );
-  console.log("Received GET");
+  console.log('Received GET');
 });
 
-app.get("/test", (req, res) => res.status(200).send("all good 🙏"));
+app.get('/test', (req, res) => res.status(200).send('all good 🙏'));
+app.get('/result', (req, res) => res.status(200).json(result));
+
 // A route for POST requests sent to `/update`
-app.post("/update", function (req, res) {
+app.post('/update', function (req, res) {
   if (!req.body.username || !req.body.data) {
-    console.log("Received incomplete POST: " + JSON.stringify(req.body));
-    return res.send({ status: "error", message: "missing parameter(s)" });
+    console.log('Received incomplete POST: ' + JSON.stringify(req.body));
+    return res.send({ status: 'error', message: 'missing parameter(s)' });
   } else {
-    console.log("Received POST: " + JSON.stringify(req.body));
+    console.log('Received POST: ' + JSON.stringify(req.body));
     return res.send(req.body);
   }
 });
 
 // A GET request handler for `/update`
-app.get("/update", function (req, res) {
-  var dummyData = {
-    username: "testUser",
-    data: "1234",
+app.get('/update', function (req, res) {
+  const dummyData = {
+    username: 'testUser',
+    data: '1234'
   };
-  console.log("Received GET: " + JSON.stringify(req.body));
+  console.log('Received GET: ' + JSON.stringify(req.body));
   if (!req.query.username) {
-    return res.send({ status: "error", message: "no username" });
+    return res.send({ status: 'error', message: 'no username' });
   } else if (!req.query.data) {
-    return res.send({ status: "error", message: "no data" });
+    return res.send({ status: 'error', message: 'no data' });
   } else if (req.query.username != dummyData.username) {
-    return res.send({ status: "error", message: "username does not match" });
+    return res.send({ status: 'error', message: 'username does not match' });
   } else {
     return res.send(dummyData);
   }
@@ -49,5 +88,5 @@ app.get("/update", function (req, res) {
 
 // Listen on port 8080
 var listener = app.listen(8080, function () {
-  console.log("Listening on port " + listener.address().port);
+  console.log('Listening on port ' + listener.address().port);
 });
