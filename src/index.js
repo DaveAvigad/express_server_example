@@ -1,17 +1,20 @@
 // init project
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const url = String(process.env.HOSTNAME).split('-');
 
 const { MongoClient } = require('mongodb');
+const { MONGO_URL, MONGO_USER, MONGO_PASS } = process.env;
+const uri = `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@${MONGO_URL}`;
 let result = {};
+
 async function main () {
   /**
    * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
    * See https://docs.mongodb.com/drivers/node/ for more details
    */
-  const uri = 'mongodb+srv://db-user:db-pass@cluster0.i39dvc2.mongodb.net/?retryWrites=true&w=majority';
 
   /**
    * The Mongo Client you will use to interact with your database
@@ -25,6 +28,7 @@ async function main () {
   try {
     // Connect to the MongoDB cluster
     await client.connect();
+    console.log('connected to mongo');
 
     // Make the appropriate DB calls
     result = await client.db('sample_airbnb').collection('listingsAndReviews').findOne();
@@ -79,7 +83,7 @@ app.get('/update', function (req, res) {
     return res.send({ status: 'error', message: 'no username' });
   } else if (!req.query.data) {
     return res.send({ status: 'error', message: 'no data' });
-  } else if (req.query.username != dummyData.username) {
+  } else if (req.query.username !== dummyData.username) {
     return res.send({ status: 'error', message: 'username does not match' });
   } else {
     return res.send(dummyData);
