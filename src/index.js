@@ -1,13 +1,16 @@
-// init project
 require('dotenv').config();
+console.log(process.env.NODE_ENV);
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const url = String(process.env.HOSTNAME).split('-');
 
 const { MongoClient } = require('mongodb');
+
 const { MONGO_URL, MONGO_USER, MONGO_PASS } = process.env;
 const uri = `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@${MONGO_URL}`;
+
 let result = {};
 
 async function main () {
@@ -48,6 +51,7 @@ app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use('/', express.static('public'));
 // This route processes GET requests to "/"`
 app.get('/', function (req, res) {
   res.send(
@@ -57,7 +61,7 @@ app.get('/', function (req, res) {
   );
   console.log('Received GET');
 });
-
+app.get('/login', (req, res) => res.redirect('/welcome.html'));
 app.get('/test', (req, res) => res.status(200).send('all good 🙏'));
 app.get('/result', (req, res) => res.status(200).json(result));
 
